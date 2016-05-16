@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
@@ -42,6 +43,8 @@ import java.util.Date;
 import jp.co.cyberagent.android.gpuimage.GPUImage;
 import jp.co.cyberagent.android.gpuimage.GPUImage.OnPictureSavedListener;
 import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageFilterGroup;
+import jp.co.cyberagent.android.gpuimage.GPUImageMovieWriter;
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools;
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.FilterAdjuster;
 import jp.co.cyberagent.android.gpuimage.sample.GPUImageFilterTools.OnGpuImageFilterChosenListener;
@@ -56,6 +59,9 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     private CameraLoader mCamera;
     private GPUImageFilter mFilter;
     private FilterAdjuster mFilterAdjuster;
+    private GPUImageMovieWriter mMovieWriter;
+
+    private boolean mIsRecording = false;
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -64,9 +70,13 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
         ((SeekBar) findViewById(R.id.seekBar)).setOnSeekBarChangeListener(this);
         findViewById(R.id.button_choose_filter).setOnClickListener(this);
         findViewById(R.id.button_capture).setOnClickListener(this);
+        findViewById(R.id.button_record).setOnClickListener(this);
 
         mGPUImage = new GPUImage(this);
         mGPUImage.setGLSurfaceView((GLSurfaceView) findViewById(R.id.surfaceView));
+
+        mMovieWriter = new GPUImageMovieWriter();
+        mGPUImage.setFilter(mMovieWriter);
 
         mCameraHelper = new CameraHelper(this);
         mCamera = new CameraLoader();
@@ -88,6 +98,10 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
     protected void onPause() {
         mCamera.onPause();
         super.onPause();
+
+        if (mIsRecording) {
+            mMovieWriter.stopRecording();
+        }
     }
 
     @Override
@@ -121,6 +135,25 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
             case R.id.img_switch_camera:
                 mCamera.switchCamera();
                 break;
+
+            case R.id.button_record:
+                onClickRecord((Button)v);
+                break;
+        }
+    }
+
+    private void onClickRecord(Button btn) {
+        if (mIsRecording) {
+            // go to stop recording
+            mIsRecording = false;
+            mMovieWriter.stopRecording();
+            btn.setText("Start Record");
+        } else {
+            // go to start recording
+            mIsRecording = true;
+            File recordFile = getOutputMediaFile(MEDIA_TYPE_VIDEO);
+            mMovieWriter.startRecording(recordFile.getAbsolutePath(), 540, 960);
+            btn.setText("Stop Record");
         }
     }
 
@@ -216,7 +249,12 @@ public class ActivityCamera extends Activity implements OnSeekBarChangeListener,
         if (mFilter == null
                 || (filter != null && !mFilter.getClass().equals(filter.getClass()))) {
             mFilter = filter;
-            mGPUImage.setFilter(mFilter);
+
+            GPUImageFilterGroup filters = new GPUImageFilterGroup();
+            filters.addFilter(mFilter);
+            filters.addFilter(mMovieWriter);
+
+            mGPUImage.setFilter(filters);
             mFilterAdjuster = new FilterAdjuster(mFilter);
         }
     }
