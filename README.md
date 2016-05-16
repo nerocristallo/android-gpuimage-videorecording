@@ -11,3 +11,7 @@ Base on: [Android GPUImage framework](https://github.com/CyberAgent/android-gpui
 1. draw on current screen surface
 2. switch to encoder input surface and draw previous frame buffer again on it
 3. switch back to screen surface
+
+## Reference
+1. EGL surface helper: https://github.com/google/grafika
+2. Media encoder: https://github.com/saki4510t/AudioVideoRecordingSample
