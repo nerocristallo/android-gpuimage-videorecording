@@ -75,6 +75,12 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
         if (mBitmap == null) {
             return;
         }
+        if (mFilterSourceTexture2 != OpenGlUtils.NO_TEXTURE) {
+            GLES20.glDeleteTextures(1, new int[]{
+                    mFilterSourceTexture2
+            }, 0);
+            mFilterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+        }
         runOnDraw(new Runnable() {
             public void run() {
                 if (mFilterSourceTexture2 == OpenGlUtils.NO_TEXTURE) {

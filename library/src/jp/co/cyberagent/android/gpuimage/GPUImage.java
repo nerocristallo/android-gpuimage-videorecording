@@ -514,7 +514,7 @@ public class GPUImage {
         }
 
         @Override
-        protected int getImageOrientation() throws IOException {
+        protected int getImageOrientation() {
             Cursor cursor = mContext.getContentResolver().query(mUri,
                     new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
 
